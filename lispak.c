@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Operator = mpc_new("operator");
   mpc_parser_t* Function = mpc_new("function");
   mpc_parser_t* Expr = mpc_new("expr");
-  mpc_parser_t* Lispy = mpc_new("lispy");
+  mpc_parser_t* Lispak = mpc_new("lispak");
   
   mpca_lang(MPCA_LANG_DEFAULT,
       "                                                               \
@@ -65,20 +65,20 @@ int main(int argc, char** argv) {
         operator: '+' | '-' | '*' | '/' | '^' | '%';                  \
         function: \"min\" | \"max\";                                  \
         expr: <number> | '(' <operator> <expr>+ ')';                  \
-        lispy: /^/(<operator> | <function>) <expr>+ /$/ ;             \
+        lispak: /^/(<operator> | <function>) <expr>+ /$/ ;             \
       ",
-      Number, Operator, Function, Expr, Lispy);
+      Number, Operator, Function, Expr, Lispak);
 
-  puts("Lispy Version 0.0.0.0.3");
+  puts("Lispak Version 0.0.0.0.3");
   puts("Press Ctrl+c to Exit\n");
 
   while(1) {
-    char* input = readline("Lispy> ");
+    char* input = readline("Lispak> ");
     add_history(input);
 
     /* Attempt to Parse the user Input */
     mpc_result_t r;
-    if (mpc_parse("<stdin>", input, Lispy, &r)) {
+    if (mpc_parse("<stdin>", input, Lispak, &r)) {
       /* On Success eval */
       printf("%li\n", eval(r.output));
       mpc_ast_delete(r.output);
@@ -91,6 +91,6 @@ int main(int argc, char** argv) {
     free(input);
   }
 
-  mpc_cleanup(4, Number, Operator, Expr, Lispy);
+  mpc_cleanup(4, Number, Operator, Expr, Lispak);
   return 0;
 }
