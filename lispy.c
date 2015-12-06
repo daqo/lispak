@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdbool.h>
 #include "lib/mpc.h"
 
 #include <editline/readline.h>
 
-bool isOperatorUnaryMinus(char* op, int numOperands) {
+int isOperatorUnaryMinus(char* op, int numOperands) {
   return (numOperands == 1) && (strcmp(op, "-") == 0);
 }
 
