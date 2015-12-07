@@ -5,10 +5,33 @@
 
 #include <editline/readline.h>
 
+/* Declare a Struct with a Union to support both longs and doubles */
+typedef struct {
+  enum { LONG, DOUBLE } type;
+  union {
+    long long_num;
+    double double_num;
+  } value;
+} Number;
+
+Number new_long(long v) {
+  Number n;
+  n.value.long_num = v;
+  n.type = LONG;
+  return n;
+}
+
+Number new_double(double v) {
+  Number n;
+  n.value.double_num = v;
+  n.type = DOUBLE;
+  return n;
+}
+
 /* Declare New lval Struct */
 typedef struct {
   int type;
-  long num;
+  Number num;
   int err;
 } lval;
 
@@ -19,7 +42,7 @@ enum lval_type { LVAL_NUM, LVAL_ERR };
 enum lval_errors { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
 
 /* Create a new number type lval */
-lval lval_num(long x) {
+lval lval_num(Number x) {
   lval v;
   v.type = LVAL_NUM;
   v.num = x;
@@ -38,7 +61,13 @@ lval lval_err(int x) {
 void lval_print(lval v) {
   switch (v.type) {
     /* In the case the type is a number print it */
-    case LVAL_NUM: printf("%li", v.num); break;
+    case LVAL_NUM: 
+      if (v.num.type == DOUBLE) {
+        printf("%f", v.num.value.double_num);
+      } else {
+        printf("%ld", v.num.value.long_num);
+      }
+      break;
     /* In the case the type is an error */
     case LVAL_ERR:
       if (v.err == LERR_DIV_ZERO) {
@@ -62,17 +91,35 @@ void lval_println(lval v) {
 lval eval_op(lval x, char* op, lval y) {
   if (x.type == LVAL_ERR) { return x; }
   if (y.type == LVAL_ERR) { return y; }
-
-  if (strcmp(op, "+") == 0) { return lval_num(x.num + y.num); }
-  if (strcmp(op, "-") == 0) { return lval_num(x.num - y.num); }
-  if (strcmp(op, "*") == 0) { return lval_num(x.num * y.num); }
-  if (strcmp(op, "/") == 0) { 
-    return (y.num == 0) ? lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
+  
+  /***************/
+  int doubleExpr = 0;
+  if (x.num.type == DOUBLE || y.num.type == DOUBLE) {
+    doubleExpr = 1;
   }
-  if (strcmp(op, "%") == 0) { return lval_num(x.num % y.num); }
-  if (strcmp(op, "^") == 0) { return lval_num((long) pow(x.num, y.num)); }
-  if (strcmp(op, "min") == 0) { return lval_num((long) fmin(x.num, y.num)); }
-  if (strcmp(op, "max") == 0) { return lval_num((long) fmax(x.num, y.num)); }
+  /****************/
+  
+  if (strcmp(op, "+") == 0) {
+    if (doubleExpr) {
+      return lval_num(new_double(
+            ((x.num.type == DOUBLE) ? x.num.value.double_num : x.num.value.long_num) 
+            + 
+            ((y.num.type == DOUBLE) ? y.num.value.double_num : y.num.value.long_num)
+      ));
+    }
+    else {
+      return lval_num(new_long(x.num.value.long_num + y.num.value.long_num));
+    }
+  }
+  // if (strcmp(op, "-") == 0) { return lval_num(x.num - y.num); }
+  // if (strcmp(op, "*") == 0) { return lval_num(x.num * y.num); }
+  // if (strcmp(op, "/") == 0) { 
+  //   return (y.num == 0) ? lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
+  // }
+  // if (strcmp(op, "%") == 0) { return lval_num(x.num % y.num); }
+  // if (strcmp(op, "^") == 0) { return lval_num((long) pow(x.num, y.num)); }
+  // if (strcmp(op, "min") == 0) { return lval_num((long) fmin(x.num, y.num)); }
+  // if (strcmp(op, "max") == 0) { return lval_num((long) fmax(x.num, y.num)); }
 
   return lval_err(LERR_BAD_OP);
 }
@@ -85,9 +132,15 @@ lval eval(mpc_ast_t* t) {
   /* If tagged as number return it directly. */ 
   if (strstr(t->tag, "number")) {
     /* Check if there is some error in conversion */
-    errno = 0;
-    long x = strtol(t->contents, NULL, 10);
-    return errno != ERANGE ? lval_num(x) : lval_err(LERR_BAD_NUM);
+    if(strstr(t->contents, ".")) {
+        errno = 0;
+        double x = strtod(t->contents, NULL);
+        return errno != ERANGE ? lval_num(new_double(x)) : lval_err(LERR_BAD_NUM);
+    } else {
+        errno = 0;
+        long x = strtol(t->contents, NULL, 10);
+        return errno != ERANGE ? lval_num(new_long(x)) : lval_err(LERR_BAD_NUM);
+    }
   }
 
   /* The operator is always second child. */
@@ -106,8 +159,10 @@ lval eval(mpc_ast_t* t) {
     i++;
   }
 
+  /* make sure a statement like (- 12) will evaluate as -12 */
   if (isOperatorUnaryMinus(op, numOfOperands)) {
-      return lval_num(-1 * x.num);
+    Number n = (x.num.type == DOUBLE) ? new_double(-1 *  x.num.value.double_num) : new_long(-1 * x.num.value.long_num);
+    return lval_num(n);
   }
 
   return x;
