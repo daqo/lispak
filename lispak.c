@@ -39,7 +39,7 @@ typedef struct {
 enum lval_type { LVAL_NUM, LVAL_ERR };
 
 /* Create Enumeration of Possible Error Types */
-enum lval_errors { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
+enum lval_errors { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM, LERR_OPERANDs_INVALID };
 
 /* Create a new number type lval */
 lval lval_num(Number x) {
@@ -79,6 +79,9 @@ void lval_print(lval v) {
       if (v.err == LERR_BAD_NUM) {
         printf("Error: Invalid Number.");
       }
+      if (v.err == LERR_OPERANDs_INVALID) {
+        printf("Error: Invalid Operands."); 
+      }
       break;
   }
 }
@@ -88,38 +91,133 @@ void lval_println(lval v) {
   lval_print(v); putchar('\n');
 }
 
+Number add_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          ((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          + 
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num)
+    );
+  } else {
+    val = new_long(a.value.long_num + b.value.long_num);
+  }
+  return val;
+}
+
+Number deduct_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          ((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          - 
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num)
+    );
+  } else {
+    val = new_long(a.value.long_num - b.value.long_num);
+  }
+  return val;
+}
+
+Number multiply_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          ((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          * 
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num)
+    );
+  } else {
+    val = new_long(a.value.long_num * b.value.long_num);
+  }
+  return val;
+}
+
+Number devide_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          ((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          / 
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num)
+    );
+  } else {
+    val = new_long(a.value.long_num / b.value.long_num);
+  }
+  return val;
+}
+
+Number modulo_op(Number a, Number b) {
+  Number val;
+  val = new_long(a.value.long_num % b.value.long_num);
+  return val;
+}
+
+Number power_op(Number a, Number b) {
+  Number val;
+  val = new_long(pow(a.value.long_num, b.value.long_num));
+  return val;
+}
+
+Number min_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          fmin(((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          ,
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num))
+    );
+  } else {
+    val = new_long(fmin(a.value.long_num, b.value.long_num));
+  }
+  return val;
+}
+
+Number max_op(Number a, Number b) {
+  Number val;
+  if (a.type == DOUBLE || b.type == DOUBLE) {
+    val = new_double(
+          fmax(((a.type == DOUBLE) ? a.value.double_num : a.value.long_num) 
+          ,
+          ((b.type == DOUBLE) ? b.value.double_num : b.value.long_num))
+    );
+  } else {
+    val = new_long(fmax(a.value.long_num, b.value.long_num));
+  }
+  return val;
+}
+
 lval eval_op(lval x, char* op, lval y) {
   if (x.type == LVAL_ERR) { return x; }
   if (y.type == LVAL_ERR) { return y; }
   
-  /***************/
-  int doubleExpr = 0;
-  if (x.num.type == DOUBLE || y.num.type == DOUBLE) {
-    doubleExpr = 1;
-  }
-  /****************/
   
-  if (strcmp(op, "+") == 0) {
-    if (doubleExpr) {
-      return lval_num(new_double(
-            ((x.num.type == DOUBLE) ? x.num.value.double_num : x.num.value.long_num) 
-            + 
-            ((y.num.type == DOUBLE) ? y.num.value.double_num : y.num.value.long_num)
-      ));
-    }
-    else {
-      return lval_num(new_long(x.num.value.long_num + y.num.value.long_num));
+  if (strcmp(op, "+") == 0) { return lval_num(add_op(x.num, y.num)); }
+  if (strcmp(op, "-") == 0) { return lval_num(deduct_op(x.num, y.num));  }
+  if (strcmp(op, "*") == 0) { return lval_num(multiply_op(x.num, y.num));  }
+  if (strcmp(op, "/") == 0) { 
+    if ((y.num.type == LONG && y.num.value.long_num == 0) || (y.num.type == DOUBLE && y.num.value.double_num == 0)) {
+      return lval_err(LERR_DIV_ZERO);
+    } else {
+      return lval_num(devide_op(x.num, y.num));
     }
   }
-  // if (strcmp(op, "-") == 0) { return lval_num(x.num - y.num); }
-  // if (strcmp(op, "*") == 0) { return lval_num(x.num * y.num); }
-  // if (strcmp(op, "/") == 0) { 
-  //   return (y.num == 0) ? lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
-  // }
-  // if (strcmp(op, "%") == 0) { return lval_num(x.num % y.num); }
-  // if (strcmp(op, "^") == 0) { return lval_num((long) pow(x.num, y.num)); }
-  // if (strcmp(op, "min") == 0) { return lval_num((long) fmin(x.num, y.num)); }
-  // if (strcmp(op, "max") == 0) { return lval_num((long) fmax(x.num, y.num)); }
+  if (strcmp(op, "%") == 0) { 
+    if (x.num.type == DOUBLE || y.num.type == DOUBLE) {
+      return lval_err(LERR_OPERANDs_INVALID);
+    } else {
+      return lval_num(modulo_op(x.num, y.num));
+    }
+  }
+  if (strcmp(op, "^") == 0) { 
+    if (x.num.type == DOUBLE || y.num.type == DOUBLE) {
+      return lval_err(LERR_OPERANDs_INVALID);
+    } else {
+      return lval_num(power_op(x.num, y.num)); 
+    }
+  }
+  if (strcmp(op, "min") == 0) { return lval_num(min_op(x.num, y.num)); }
+  if (strcmp(op, "max") == 0) { return lval_num(max_op(x.num, y.num)); }
 
   return lval_err(LERR_BAD_OP);
 }
