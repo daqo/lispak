@@ -276,12 +276,11 @@ int main(int argc, char** argv) {
   mpc_parser_t* Lispak = mpc_new("lispak");
   
   mpca_lang(MPCA_LANG_DEFAULT,
-      "                                                               \
-        number: /-?([0-9])+(\\.[0-9]+)?/ ;                            \
-        operator: '+' | '-' | '*' | '/' | '^' | '%';                  \
-        function: \"min\" | \"max\";                                  \
-        expr: <number> | '(' <operator> <expr>+ ')';                  \
-        lispak: /^/(<operator> | <function>) <expr>+ /$/ ;            \
+      "                                                                                   \
+        number: /-?([0-9])+(\\.[0-9]+)?/ ;                                                \
+        operator: '+' | '-' | '*' | '/' | '^' | '%' | \"min\" | \"max\";                  \
+        expr: <number> | '(' <operator> <expr>+ ')';                                      \
+        lispak: /^/<operator> <expr>+ /$/ ;                                               \
       ",
       Number, Operator, Function, Expr, Lispak);
 
