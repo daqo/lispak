@@ -270,21 +270,22 @@ lval eval(mpc_ast_t* t) {
 int main(int argc, char** argv) {
 
   mpc_parser_t* Number = mpc_new("number");
-  mpc_parser_t* Operator = mpc_new("operator");
-  mpc_parser_t* Function = mpc_new("function");
+  mpc_parser_t* Symbol = mpc_new("symbol");
+  mpc_parser_t* Sexpr = mpc_new("sexpr");
   mpc_parser_t* Expr = mpc_new("expr");
   mpc_parser_t* Lispak = mpc_new("lispak");
   
   mpca_lang(MPCA_LANG_DEFAULT,
-      "                                                                                   \
-        number: /-?([0-9])+(\\.[0-9]+)?/ ;                                                \
-        operator: '+' | '-' | '*' | '/' | '^' | '%' | \"min\" | \"max\";                  \
-        expr: <number> | '(' <operator> <expr>+ ')';                                      \
-        lispak: /^/<operator> <expr>+ /$/ ;                                               \
+      "                                                                               \
+        number: /-?([0-9])+(\\.[0-9]+)?/ ;                                            \
+        symbol: '+' | '-' | '*' | '/' | '^' | '%' | \"min\" | \"max\";                \
+        sexpr: '(' <expr>* ')';                                                       \
+        expr: <number> | <symbol> | <sexpr>;                                          \
+        lispak: /^/ <expr>* /$/ ;                                                     \
       ",
-      Number, Operator, Function, Expr, Lispak);
+      Number, Symbol, Sexpr, Expr, Lispak);
 
-  puts("Lispak Version 0.0.0.0.4");
+  puts("Lispak Version 0.0.0.0.5");
   puts("Press Ctrl+c to Exit\n");
 
   while(1) {
@@ -307,6 +308,6 @@ int main(int argc, char** argv) {
     free(input);
   }
 
-  mpc_cleanup(4, Number, Operator, Expr, Lispak);
+  mpc_cleanup(5, Number, Symbol, Sexpr, Expr, Lispak);
   return 0;
 }
