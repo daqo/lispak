@@ -28,9 +28,8 @@ Lispak> % 5 2							# 1
 ```
 
 ## Compile
-Currently compilable on Unix/Linux/Mac
+Currently compilable on Unix/Linux/Mac. Clone the project and then run:
 
-Run:
 ```
 ./build.sh
 ```
