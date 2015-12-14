@@ -26,3 +26,11 @@ Lispak> min 1 2 3 4 5					# 1
 Lispak> max 1 2 3 4 5					# 5
 Lispak> % 5 2							# 1
 ```
+
+## Compile
+Currently compilable on Unix/Linux/Mac
+
+Run:
+```
+./build.sh
+```
