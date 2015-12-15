@@ -18,6 +18,21 @@ expr: <number> | <symbol> | <sexpr>
 lispak: /^/ <expr>* /$/                                           
 ```
 
+## Operators supported
+```
+Add: +
+Subtract: -
+Devide: /
+Multyply: *
+Power: ^
+```
+
+## Functions supported
+```
+min
+max
+```
+
 ## Usage
 ```
 Lispak> + 1 2 3 4 						# 10
