@@ -23,7 +23,7 @@ lispak: /^/ <expr>* /$/
 Add: +
 Subtract: -
 Devide: /
-Multyply: *
+Multiply: *
 Power: ^
 ```
 
