@@ -29,14 +29,14 @@ Number new_double(double v) {
 }
 
 /* Declare New lval Struct */
-typedef struct {
+typedef struct lval{
   int type;
   Number num;
   int err;
 } lval;
 
 /* Create Enumeration of Possible lval Types */
-enum lval_type { LVAL_NUM, LVAL_ERR };
+enum lval_type { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR };
 
 /* Create Enumeration of Possible Error Types */
 enum lval_errors { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM, LERR_OPERANDs_INVALID };
