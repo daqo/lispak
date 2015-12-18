@@ -32,7 +32,12 @@ Number new_double(double v) {
 typedef struct lval{
   int type;
   Number num;
-  int err;
+  /* Error and Symbol types have some string data */
+  char* err;
+  char* sym;
+  /* Count and Pointer to a list of "lval*" */
+  int count;
+  struct lval** cell;
 } lval;
 
 /* Create Enumeration of Possible lval Types */
